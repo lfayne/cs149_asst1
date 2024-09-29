@@ -259,6 +259,7 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
 //  Note: Take a careful look at this loop indexing.  This example
 //  code is not guaranteed to work when (N % VECTOR_WIDTH) != 0.
 //  Why is that the case?
+// hello
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
 
     // All ones
