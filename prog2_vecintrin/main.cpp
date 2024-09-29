@@ -250,6 +250,47 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // N and VECTOR_WIDTH, not just when VECTOR_WIDTH divides N
   //
   
+  __cs149_vec_float tempVal;
+  __cs149_vec_int tempExp;
+  __cs149_vec_float result;
+  __cs149_vec_float nines = _cs149_vset_float(9.999999f);
+  __cs149_mask maskAll, maskLiveExp, maskAboveTen, maskBelowTen;
+
+//  Note: Take a careful look at this loop indexing.  This example
+//  code is not guaranteed to work when (N % VECTOR_WIDTH) != 0.
+//  Why is that the case?
+  for (int i=0; i<N; i+=VECTOR_WIDTH) {
+
+    // All ones
+    maskAll = _cs149_init_ones();
+
+    // All zeros
+    maskAboveTen = _cs149_init_ones(0);
+
+    // Load vector of values from contiguous memory addresses
+    _cs149_vload_float(tempVal, values+i, maskAll);               // x = values[i];
+    _cs149_vload_float(tempExp, exponents+i, maskAll);            // x = exponents[i];
+    _cs149_vlt_int(maskLiveExp, );
+
+    while (_cs149_cntbits(maskLiveExp) != 0) {
+
+    }
+
+    // Set mask according to predicate
+    _cs149_vlt_float(maskBelowTen, x, nines, maskAll);     // if (x < 9.999999) {
+
+    // Execute instruction using mask ("if" clause)
+         //   output[i] = -x;
+
+    // Inverse maskIsNegative to generate "else" mask
+    maskAboveTen = _cs149_mask_not(maskBelowTen);     // } else {
+
+    // Execute instruction ("else" clause)
+    _cs149_vload_float(result, values+i, maskBelowTen); //   output[i] = x; }
+
+    // Write results back to memory
+    _cs149_vstore_float(output+i, result, maskAll);
+  }
 }
 
 // returns the sum of all elements in values
