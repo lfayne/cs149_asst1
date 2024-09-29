@@ -250,9 +250,12 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   // N and VECTOR_WIDTH, not just when VECTOR_WIDTH divides N
   //
   
+  __cs149_vec_float tempResult;
   __cs149_vec_float tempVal;
   __cs149_vec_int tempExp;
   __cs149_vec_float result;
+  __cs149_vec_int zero = _cs149_vset_int(0);
+  __cs149_vec_int one = _cs149_vset_int(1);
   __cs149_vec_float nines = _cs149_vset_float(9.999999f);
   __cs149_mask maskAll, maskLiveExp, maskAboveTen, maskBelowTen;
 
@@ -261,32 +264,29 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
 //  Why is that the case?
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
 
-    // All ones
-    maskAll = _cs149_init_ones();
+    if (i + VECTOR_WIDTH > N) {
+        maskAll = _cs149_init_ones(N - i);
+    } else {
+        maskAll = _cs149_init_ones();
+    }
 
-    // All zeros
-    maskAboveTen = _cs149_init_ones(0);
-
-    // Load vector of values from contiguous memory addresses
+    tempResult = _cs149_vset_float(1.f);
     _cs149_vload_float(tempVal, values+i, maskAll);               // x = values[i];
-    _cs149_vload_float(tempExp, exponents+i, maskAll);            // x = exponents[i];
-    _cs149_vlt_int(maskLiveExp, );
+    _cs149_vload_int(tempExp, exponents+i, maskAll);            // x = exponents[i];
+    _cs149_vlt_int(maskLiveExp, zero, tempExp, maskAll);
 
     while (_cs149_cntbits(maskLiveExp) != 0) {
-
+        _cs149_vmult_float(tempResult, tempResult, tempVal, maskLiveExp);
+        _cs149_vsub_int(tempExp, tempExp, one, maskAll);
+        _cs149_vlt_int(maskLiveExp, zero, tempExp, maskAll);
     }
 
     // Set mask according to predicate
-    _cs149_vlt_float(maskBelowTen, x, nines, maskAll);     // if (x < 9.999999) {
+    _cs149_vlt_float(maskAboveTen, nines, tempResult, maskAll);     // if (x < 9.999999) {
+    maskBelowTen = _cs149_mask_not(maskAboveTen);
 
-    // Execute instruction using mask ("if" clause)
-         //   output[i] = -x;
-
-    // Inverse maskIsNegative to generate "else" mask
-    maskAboveTen = _cs149_mask_not(maskBelowTen);     // } else {
-
-    // Execute instruction ("else" clause)
-    _cs149_vload_float(result, values+i, maskBelowTen); //   output[i] = x; }
+    _cs149_vmove_float(result, nines, maskAboveTen);
+    _cs149_vmove_float(result, tempResult, maskBelowTen);
 
     // Write results back to memory
     _cs149_vstore_float(output+i, result, maskAll);
@@ -313,7 +313,7 @@ float arraySumVector(float* values, int N) {
   //
   
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
-
+    
   }
 
   return 0.0;
