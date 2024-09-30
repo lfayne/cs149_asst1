@@ -61,21 +61,15 @@ double dist(double *x, double *y, int nDim) {
   return sqrt(accum);
 }
 
-void storeDistance(double *distances, int worker, WorkerArgs *const args) {
-    for (int m = 0; m < args->M; m++) {
-      double d = dist(&args->data[m * args->N],
-                      &args->clusterCentroids[worker * args->N], args->N);
-      
-      distances[m + worker * args->M] = d;
-    }
-}
-
-void setAssignment(int start, int end, double *distances, WorkerArgs *const args) {
+void assignCluster(int start, int end, WorkerArgs *const args) {
     for (int m = start; m < end; m++) {
         double minDist = 1e30;
         for (int k = args->start; k < args->end; k++) {
-            if (distances[m + k * args->M] < minDist) {
-                minDist = distances[m + k * args->M];
+            double d = dist(&args->data[m * args->N],
+                      &args->clusterCentroids[k * args->N], args->N);
+
+            if (d < minDist) {
+                minDist = d;
                 args->clusterAssignments[m] = k;
             }
         }
@@ -86,34 +80,18 @@ void setAssignment(int start, int end, double *distances, WorkerArgs *const args
  * Assigns each data point to its "closest" cluster centroid.
  */
 void computeAssignments(WorkerArgs *const args) {
-  double *dists = new double[args->end * args->M];
-  std::thread workers[args->end];
-
-  // Assign datapoints to closest centroids
-  for (int k = args->start + 1; k < args->end; k++) {
-    workers[k] = std::thread(storeDistance, dists, k, args);
-  }
-
-  storeDistance(dists, 0, args);
-
-  for (int i=1; i<args->end; i++) {
-    workers[i].join();
-  }
-
   int maxThreads = 8;
   std::thread distWorkers[maxThreads];
 
   for (int worker = 1; worker < maxThreads; worker++) {
-    distWorkers[worker] = std::thread(setAssignment, worker * args->M / maxThreads, (worker + 1) / maxThreads * args->M / maxThreads, dists, args);
+    distWorkers[worker] = std::thread(assignCluster, worker * args->M / maxThreads, (worker + 1) * args->M / maxThreads, args);
   }
 
-  setAssignment(0, args->M / maxThreads, dists, args);
+  assignCluster(0, args->M / maxThreads, args);
 
   for (int i=1; i<maxThreads; i++) {
     distWorkers[i].join();
   }
-
-  free(dists);
 }
 
 /**
