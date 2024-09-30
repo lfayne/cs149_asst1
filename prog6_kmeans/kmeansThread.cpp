@@ -70,6 +70,18 @@ void storeDistance(double *distances, int worker, WorkerArgs *const args) {
     }
 }
 
+void setAssignment(int start, int end, double *distances, WorkerArgs *const args) {
+    for (int m = start; m < end; m++) {
+        double minDist = 1e30;
+        for (int k = args->start; k < args->end; k++) {
+            if (distances[m + k * args->M] < minDist) {
+                minDist = distances[m + k * args->M];
+                args->clusterAssignments[m] = k;
+            }
+        }
+    }
+}
+
 /**
  * Assigns each data point to its "closest" cluster centroid.
  */
@@ -88,14 +100,17 @@ void computeAssignments(WorkerArgs *const args) {
     workers[i].join();
   }
 
-  for (int m = 0; m < args->M; m++) {
-    double minDist = 1e30;
-    for (int k = args->start; k < args->end; k++) {
-        if (dists[m + k * args->M] < minDist) {
-            minDist = dists[m + k * args->M];
-            args->clusterAssignments[m] = k;
-        }
-    }
+  int maxThreads = 8;
+  std::thread distWorkers[maxThreads];
+
+  for (int worker = 1; worker < maxThreads; worker++) {
+    distWorkers[worker] = std::thread(setAssignment, worker * args->M / maxThreads, (worker + 1) / maxThreads * args->M / maxThreads, dists, args);
+  }
+
+  setAssignment(0, args->M / maxThreads, dists, args);
+
+  for (int i=1; i<maxThreads; i++) {
+    distWorkers[i].join();
   }
 
   free(dists);
