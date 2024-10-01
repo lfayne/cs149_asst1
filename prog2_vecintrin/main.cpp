@@ -277,8 +277,8 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
 
     while (_cs149_cntbits(maskLiveExp) != 0) {
         _cs149_vmult_float(tempResult, tempResult, tempVal, maskLiveExp);
-        _cs149_vsub_int(tempExp, tempExp, one, maskAll);
-        _cs149_vlt_int(maskLiveExp, zero, tempExp, maskAll);
+        _cs149_vsub_int(tempExp, tempExp, one, maskLiveExp);
+        _cs149_vlt_int(maskLiveExp, zero, tempExp, maskLiveExp);
     }
 
     // Set mask according to predicate
