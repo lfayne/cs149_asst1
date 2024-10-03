@@ -9,6 +9,7 @@
 using namespace ispc;
 
 extern void sqrtSerial(int N, float startGuess, float* values, float* output);
+extern void sqrtAVX2(int N, float startGuess, float* values, float* output);
 
 static void verifyResult(int N, float* result, float* gold) {
     for (int i=0; i<N; i++) {
@@ -34,13 +35,13 @@ int main() {
         // to you generate best and worse-case speedups
         
         // starter code populates array with random input values
-        // values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
-        if (i % 8 == 0) {
-            values[i] = 2.999f;
-        }
-        else {
-            values[i] = 1.0f;
-        }
+        values[i] = .001f + 2.998f * static_cast<float>(rand()) / RAND_MAX;
+        // if (i % 8 == 0) {
+        //     values[i] = 2.999f;
+        // }
+        // else {
+        //     values[i] = 1.0f;
+        // }
         // values[i] = 2.999f;
     }
 
@@ -61,6 +62,21 @@ int main() {
     }
 
     printf("[sqrt serial]:\t\t[%.3f] ms\n", minSerial * 1000);
+
+    verifyResult(N, output, gold);
+
+    //
+    // Run EC AVX2 Implementation
+    //
+    double minAVX2 = 1e30;
+    for (int i = 0; i < 3; ++i) {
+        double startTime = CycleTimer::currentSeconds();
+        sqrtAVX2(N, initialGuess, values, output);
+        double endTime = CycleTimer::currentSeconds();
+        minAVX2 = std::min(minAVX2, endTime - startTime);
+    }
+
+    printf("[sqrt avx2]:\t\t[%.3f] ms\n", minAVX2 * 1000);
 
     verifyResult(N, output, gold);
 
