@@ -90,6 +90,8 @@ void mandelbrotSerial(
     }
 }
 
+// This function uses the same logic as mandelbrotSerial, but does not process the image in horizontal chunks/slices
+// Instead it skips rows to process using the parameter numThreads
 void mandelbrotSerialModulus(
     float x0, float y0, float x1, float y1,
     int width, int height,

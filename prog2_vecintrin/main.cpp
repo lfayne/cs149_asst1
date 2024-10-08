@@ -259,9 +259,6 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
   __cs149_vec_float nines = _cs149_vset_float(9.999999f);
   __cs149_mask maskAll, maskLiveExp, maskAboveTen, maskBelowTen;
 
-//  Note: Take a careful look at this loop indexing.  This example
-//  code is not guaranteed to work when (N % VECTOR_WIDTH) != 0.
-//  Why is that the case?
   for (int i=0; i<N; i+=VECTOR_WIDTH) {
 
     if (i + VECTOR_WIDTH > N) {
@@ -271,7 +268,7 @@ void clampedExpVector(float* values, int* exponents, float* output, int N) {
     }
 
     tempResult = _cs149_vset_float(1.f);
-    _cs149_vload_float(tempVal, values+i, maskAll);               // x = values[i];
+    _cs149_vload_float(tempVal, values+i, maskAll);             // x = values[i];
     _cs149_vload_int(tempExp, exponents+i, maskAll);            // x = exponents[i];
     _cs149_vlt_int(maskLiveExp, zero, tempExp, maskAll);
 

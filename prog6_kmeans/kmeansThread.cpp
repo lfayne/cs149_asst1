@@ -61,6 +61,7 @@ double dist(double *x, double *y, int nDim) {
   return sqrt(accum);
 }
 
+// Assigns points to a cluster indexed from start to end
 void assignCluster(int start, int end, WorkerArgs *const args) {
     for (int m = start; m < end; m++) {
         double minDist = 1e30;

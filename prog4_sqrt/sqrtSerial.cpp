@@ -27,6 +27,7 @@ void sqrtSerial(int N,
     }
 }
 
+// sqrt implementation using avx2 intrinsics
 void sqrtAVX2(int N,
                 float initialGuess,
                 float values[],
